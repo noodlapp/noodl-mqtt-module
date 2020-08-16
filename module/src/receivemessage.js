@@ -20,10 +20,10 @@ const ReceiveMessageNode  = Noodl.defineNode({
     useInputAsLabel: "topic",
     color: "purple",
     initialize: function() {
-        this.payload = {};
         this.messageReceived = false;
         this.inputs.enabled = true;
         this.inputs.topic = '';
+        this.inputs.payload = '';
         this.topicValues = {};
         this.topicOutputs = {};
         this.payloadValues = {};
@@ -40,7 +40,7 @@ const ReceiveMessageNode  = Noodl.defineNode({
             default:'',
         },
         payload: {
-            type:{name:'stringlist',allowEditOnly:true},
+            type:{name:'stringlist',allowEditOnly:true}, // Allow edit only means that no connections can be made to this input, it can only be edited in the property panel
             group:'Payload',
         }
     },
@@ -57,6 +57,9 @@ const ReceiveMessageNode  = Noodl.defineNode({
     },
     methods: {
       onNodeDeleted: function() {
+        // This function is called whenever the node instance is removed from the graph, e.g. if it is
+        // deleted in the editor or if it was part of something dynamic such as a ForEach and have now been
+        // removed
         if (this.subscription) {
           MQTTConnection.instance.unsubscribe(this.subscription.topic, this.subscription.subscriber);
           this.subscription = undefined;
@@ -71,16 +74,18 @@ const ReceiveMessageNode  = Noodl.defineNode({
           set: this.setTopicValue.bind(this, name.substring('topic-'.length))
         });
       },
+
+      // This method is called to register outputs dynamically, same as for inputs above
       registerOutputIfNeeded: function (name) {
-        if (this.hasOutput(name)) {
+        if (this.hasOutput(name)) { // Make sure the output is not already registered
           return;
         }
 
-        if(name.startsWith('topic-')) this.registerOutput(name, {
+        if(name.startsWith('topic-')) this.registerOutput(name, { // Topic ports are connected to the getTopicValue getter
           getter: this.getTopicValue.bind(this, name.substring('topic-'.length))
         })
 
-        if(name.startsWith('payload-')) this.registerOutput(name, {
+        if(name.startsWith('payload-')) this.registerOutput(name, { // Payload ports are connected to the getPayloadValue getter
             getter: this.getPayloadValue.bind(this, name.substring('payload-'.length))
         })
       },
@@ -177,13 +182,18 @@ const ReceiveMessageNode  = Noodl.defineNode({
        }
      },
      setup: function(context, graphModel) {
-
+        // This function is only called when the viewer is connected to the editor and here
+        // we can provide the editor with some extra info about or node type and react on
+        // changes in the node graph
         if(!context.editorConnection || !context.editorConnection.isRunningLocally()) {
             return;
         }
 
         graphModel.on("nodeAdded.Receive Message", function(node) {
+            // Called when a node of the type Receive Message have been created
+
             function updatePorts() {
+                // This function will create dynamic ports based on the topic and payload inputs
                 var ports = [];
 
                 const topic = node.parameters.topic;
@@ -228,6 +238,7 @@ const ReceiveMessageNode  = Noodl.defineNode({
                 context.editorConnection.sendDynamicPorts(node.id,ports);
             }
 
+            // We will have dynamic ports based on the topic and payload inputs
             if(node.parameters.topic || node.parameters.payload) {
                 updatePorts();
             }

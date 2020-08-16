@@ -17,6 +17,7 @@ Noodl.defineModule({
     setup() {
 		MQTTConnection.instance = new MQTTConnection();
 		
+		// Connect to the MQTT broker specified in the module settings
 		MQTTConnection.instance.connect({
 			url:Noodl.getProjectSettings()['mqtt-module-broker-url'],
 			clientId:'NoodlMQTT'

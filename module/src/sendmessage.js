@@ -32,18 +32,18 @@ const SendMessageNode = Noodl.defineNode({
     name: "Send Message",
     category: "MQTT",
     useInputAsLabel: "topic", // This will instruct Noodl to use the topic input as the label of the nodes when shown in the editor
-    color: "purple",
+    color: "purple", // This will specify the color of the node in the editor, it can be "green" (data), "purple" (typically messages, component inputs/outputs and other control nodes) and "default" (grey)
     initialize: function () {
-        this.payload = {};
-        this.topic = "";
+        this.inputs.payload = "";
+        this.inputs.topic = "";
         this.payloadValues = {};
         this.topicValues = {};
         this.hasScheduledPublish = false;
-        this.publishOnInputsChanged = false;
-        this.rateLimitEnabled = false;
-        this.maxMessagesPerSecond = 10;
+        this.inputs.publishOnInputsChanged = false;
+        this.inputs.rateLimitEnabled = false;
+        this.inputs.maxMessagesPerSecond = 10;
         this.lastPublishTime = 0;
-        this.format = 'json';
+        this.inputs.format = 'json';
     },
     signals: {
         Send: function () {
@@ -71,9 +71,6 @@ const SendMessageNode = Noodl.defineNode({
             displayName: 'Format',
             group: 'General',
             default: 'json',
-            /*   set: function(value) {
-                 this._internal.format = value;
-               }*/
         },
         publishOnInputsChanged: {
             type: 'boolean',
@@ -86,18 +83,12 @@ const SendMessageNode = Noodl.defineNode({
             default: false,
             displayName: 'Rate Limit',
             group: 'Rate Limit',
-            /*   set: function(value) {
-                   this._internal.rateLimitEnabled = value ? true : false;
-               }*/
         },
         maxMessagesPerSecond: {
             type: 'number',
             default: 10,
             displayName: 'Messages / Sec',
             group: 'Rate Limit',
-            /*    set: function(value) {
-                    this._internal.maxMessagesPerSecond = Number(value);
-                }*/
         }
     },
     methods: {
@@ -106,10 +97,12 @@ const SendMessageNode = Noodl.defineNode({
                 return;
             }
 
+            // All ports where the name starts with "topic-" are registered with the setter setTopicValue
             if(name.startsWith('topic-')) this.registerInput(name, {
                 set: this.setTopicValue.bind(this, name.substring('topic-'.length))
             })
 
+             // All ports where the name starts with "payload-" are registered with the setter setPayloadValue
             if(name.startsWith('payload-')) this.registerInput(name, {
                 set: this.setPayloadValue.bind(this, name.substring('payload-'.length))
             })            
@@ -225,7 +218,7 @@ const SendMessageNode = Noodl.defineNode({
                     payload.split(',').forEach((p) => {
                         ports.push({
                             name: 'payload-'+p, // The name of the port, we add a prefix to know that this port is a payload port
-                            displayName:p,
+                            displayName:p, // This is the display name, i.e. the name shown in the editor, we don't want the prefix here
                             group: 'Payload',
                             plug: 'input',
                             type: {name:'*',allowConnectionsOnly:true}
