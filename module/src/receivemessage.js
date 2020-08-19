@@ -150,7 +150,6 @@ const ReceiveMessageNode  = Noodl.defineNode({
         }
 
         this.sendSignalOnOutput("messageReceived");
-       // this.context.scheduleUpdate(); ???
       },
       scheduleSubscribe:function() {
         if(this.subscribeScheduled) return;
@@ -176,9 +175,6 @@ const ReceiveMessageNode  = Noodl.defineNode({
         this.subscription = {topic:topic,
                                 subscriber:subscriber};
         MQTTConnection.instance.subscribe(topic,subscriber);
-     /*   this.context.eventEmitter.once("applicationDataReloaded", function() {
-          Services.pubsub.unsubscribe(topic,subscriber);
-        }); ????*/
        }
      },
      setup: function(context, graphModel) {
